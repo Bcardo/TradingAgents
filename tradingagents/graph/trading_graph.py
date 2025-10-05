@@ -7,6 +7,9 @@ from datetime import date
 from typing import Dict, Any, Tuple, List, Optional
 
 from langchain_openai import ChatOpenAI
+from langchain_anthropic import ChatAnthropic
+from langchain_google_genai import ChatGoogleGenerativeAI
+
 from langgraph.prebuilt import ToolNode
 
 from tradingagents.agents import *
@@ -17,7 +20,21 @@ from tradingagents.agents.utils.agent_states import (
     InvestDebateState,
     RiskDebateState,
 )
-from tradingagents.dataflows.interface import set_config
+from tradingagents.dataflows.config import set_config
+
+# Import the new abstract tool methods from agent_utils
+from tradingagents.agents.utils.agent_utils import (
+    get_stock_data,
+    get_indicators,
+    get_fundamentals,
+    get_balance_sheet,
+    get_cashflow,
+    get_income_statement,
+    get_news,
+    get_insider_sentiment,
+    get_insider_transactions,
+    get_global_news
+)
 
 from .conditional_logic import ConditionalLogic
 from .setup import GraphSetup
@@ -55,18 +72,24 @@ class TradingAgentsGraph:
         )
 
         # Initialize LLMs
-        self.deep_thinking_llm = ChatOpenAI(model=self.config["deep_think_llm"])
-        self.quick_thinking_llm = ChatOpenAI(
-            model=self.config["quick_think_llm"], temperature=0.1
-        )
-        self.toolkit = Toolkit(config=self.config)
-
+        if self.config["llm_provider"].lower() == "openai" or self.config["llm_provider"] == "ollama" or self.config["llm_provider"] == "openrouter":
+            self.deep_thinking_llm = ChatOpenAI(model=self.config["deep_think_llm"], base_url=self.config["backend_url"])
+            self.quick_thinking_llm = ChatOpenAI(model=self.config["quick_think_llm"], base_url=self.config["backend_url"])
+        elif self.config["llm_provider"].lower() == "anthropic":
+            self.deep_thinking_llm = ChatAnthropic(model=self.config["deep_think_llm"], base_url=self.config["backend_url"])
+            self.quick_thinking_llm = ChatAnthropic(model=self.config["quick_think_llm"], base_url=self.config["backend_url"])
+        elif self.config["llm_provider"].lower() == "google":
+            self.deep_thinking_llm = ChatGoogleGenerativeAI(model=self.config["deep_think_llm"])
+            self.quick_thinking_llm = ChatGoogleGenerativeAI(model=self.config["quick_think_llm"])
+        else:
+            raise ValueError(f"Unsupported LLM provider: {self.config['llm_provider']}")
+        
         # Initialize memories
-        self.bull_memory = FinancialSituationMemory("bull_memory")
-        self.bear_memory = FinancialSituationMemory("bear_memory")
-        self.trader_memory = FinancialSituationMemory("trader_memory")
-        self.invest_judge_memory = FinancialSituationMemory("invest_judge_memory")
-        self.risk_manager_memory = FinancialSituationMemory("risk_manager_memory")
+        self.bull_memory = FinancialSituationMemory("bull_memory", self.config)
+        self.bear_memory = FinancialSituationMemory("bear_memory", self.config)
+        self.trader_memory = FinancialSituationMemory("trader_memory", self.config)
+        self.invest_judge_memory = FinancialSituationMemory("invest_judge_memory", self.config)
+        self.risk_manager_memory = FinancialSituationMemory("risk_manager_memory", self.config)
 
         # Create tool nodes
         self.tool_nodes = self._create_tool_nodes()
@@ -76,7 +99,6 @@ class TradingAgentsGraph:
         self.graph_setup = GraphSetup(
             self.quick_thinking_llm,
             self.deep_thinking_llm,
-            self.toolkit,
             self.tool_nodes,
             self.bull_memory,
             self.bear_memory,
@@ -99,46 +121,38 @@ class TradingAgentsGraph:
         self.graph = self.graph_setup.setup_graph(selected_analysts)
 
     def _create_tool_nodes(self) -> Dict[str, ToolNode]:
-        """Create tool nodes for different data sources."""
+        """Create tool nodes for different data sources using abstract methods."""
         return {
             "market": ToolNode(
                 [
-                    # online tools
-                    self.toolkit.get_YFin_data_online,
-                    self.toolkit.get_stockstats_indicators_report_online,
-                    # offline tools
-                    self.toolkit.get_YFin_data,
-                    self.toolkit.get_stockstats_indicators_report,
+                    # Core stock data tools
+                    get_stock_data,
+                    # Technical indicators
+                    get_indicators,
                 ]
             ),
             "social": ToolNode(
                 [
-                    # online tools
-                    self.toolkit.get_stock_news_openai,
-                    # offline tools
-                    self.toolkit.get_reddit_stock_info,
+                    # News tools for social media analysis
+                    get_news,
                 ]
             ),
             "news": ToolNode(
                 [
-                    # online tools
-                    self.toolkit.get_global_news_openai,
-                    self.toolkit.get_google_news,
-                    # offline tools
-                    self.toolkit.get_finnhub_news,
-                    self.toolkit.get_reddit_news,
+                    # News and insider information
+                    get_news,
+                    get_global_news,
+                    get_insider_sentiment,
+                    get_insider_transactions,
                 ]
             ),
             "fundamentals": ToolNode(
                 [
-                    # online tools
-                    self.toolkit.get_fundamentals_openai,
-                    # offline tools
-                    self.toolkit.get_finnhub_company_insider_sentiment,
-                    self.toolkit.get_finnhub_company_insider_transactions,
-                    self.toolkit.get_simfin_balance_sheet,
-                    self.toolkit.get_simfin_cashflow,
-                    self.toolkit.get_simfin_income_stmt,
+                    # Fundamental analysis tools
+                    get_fundamentals,
+                    get_balance_sheet,
+                    get_cashflow,
+                    get_income_statement,
                 ]
             ),
         }
@@ -215,7 +229,7 @@ class TradingAgentsGraph:
         directory.mkdir(parents=True, exist_ok=True)
 
         with open(
-            f"eval_results/{self.ticker}/TradingAgentsStrategy_logs/full_states_log.json",
+            f"eval_results/{self.ticker}/TradingAgentsStrategy_logs/full_states_log_{trade_date}.json",
             "w",
         ) as f:
             json.dump(self.log_states_dict, f, indent=4)
