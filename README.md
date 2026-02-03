@@ -11,6 +11,18 @@
   <a href="https://github.com/TauricResearch/" target="_blank"><img alt="Community" src="https://img.shields.io/badge/Join_GitHub_Community-TauricResearch-14C290?logo=discourse"/></a>
 </div>
 
+<div align="center">
+  <!-- Keep these links. Translations will automatically update with the README. -->
+  <a href="https://www.readme-i18n.com/TauricResearch/TradingAgents?lang=de">Deutsch</a> | 
+  <a href="https://www.readme-i18n.com/TauricResearch/TradingAgents?lang=es">Español</a> | 
+  <a href="https://www.readme-i18n.com/TauricResearch/TradingAgents?lang=fr">français</a> | 
+  <a href="https://www.readme-i18n.com/TauricResearch/TradingAgents?lang=ja">日本語</a> | 
+  <a href="https://www.readme-i18n.com/TauricResearch/TradingAgents?lang=ko">한국어</a> | 
+  <a href="https://www.readme-i18n.com/TauricResearch/TradingAgents?lang=pt">Português</a> | 
+  <a href="https://www.readme-i18n.com/TauricResearch/TradingAgents?lang=ru">Русский</a> | 
+  <a href="https://www.readme-i18n.com/TauricResearch/TradingAgents?lang=zh">中文</a>
+</div>
+
 ---
 
 # TradingAgents: Multi-Agents LLM Financial Trading Framework 
@@ -68,7 +80,7 @@ Our framework decomposes complex trading tasks into specialized roles. This ensu
 - Composes reports from the analysts and researchers to make informed trading decisions. It determines the timing and magnitude of trades based on comprehensive market insights.
 
 <p align="center">
-  <img src="assets/risk.png" width="70%" style="display: inline-block; margin: 0 2%;">
+  <img src="assets/trader.png" width="70%" style="display: inline-block; margin: 0 2%;">
 </p>
 
 ### Risk Management and Portfolio Manager
@@ -76,7 +88,7 @@ Our framework decomposes complex trading tasks into specialized roles. This ensu
 - The Portfolio Manager approves/rejects the transaction proposal. If approved, the order will be sent to the simulated exchange and executed.
 
 <p align="center">
-  <img src="assets/trader.png" width="70%" style="display: inline-block; margin: 0 2%;">
+  <img src="assets/risk.png" width="70%" style="display: inline-block; margin: 0 2%;">
 </p>
 
 ## Installation and CLI
@@ -102,14 +114,21 @@ pip install -r requirements.txt
 
 ### Required APIs
 
-You will also need the FinnHub API for financial data. All of our code is implemented with the free tier.
+TradingAgents supports multiple LLM providers. Set the API key for your chosen provider:
+
 ```bash
-export FINNHUB_API_KEY=$YOUR_FINNHUB_API_KEY
+export OPENAI_API_KEY=...          # OpenAI
+export GOOGLE_API_KEY=...          # Google (Gemini)
+export ANTHROPIC_API_KEY=...       # Anthropic (Claude)
+export OPENROUTER_API_KEY=...      # OpenRouter
+export ALPHA_VANTAGE_API_KEY=...   # Alpha Vantage
 ```
 
-You will need the OpenAI API for all the agents.
+For local models, configure Ollama with `llm_provider: "ollama"` in your config.
+
+Alternatively, copy `.env.example` to `.env` and fill in your keys:
 ```bash
-export OPENAI_API_KEY=$YOUR_OPENAI_API_KEY
+cp .env.example .env
 ```
 
 ### CLI Usage
@@ -138,7 +157,7 @@ An interface will appear showing results as they load, letting you track the age
 
 ### Implementation Details
 
-We built TradingAgents with LangGraph to ensure flexibility and modularity. We utilize `o1-preview` and `gpt-4o` as our deep thinking and fast thinking LLMs for our experiments. However, for testing purposes, we recommend you use `o4-mini` and `gpt-4.1-mini` to save on costs as our framework makes **lots of** API calls.
+We built TradingAgents with LangGraph to ensure flexibility and modularity. The framework supports multiple LLM providers: OpenAI, Google, Anthropic, OpenRouter, and Ollama.
 
 ### Python Usage
 
@@ -151,7 +170,7 @@ from tradingagents.default_config import DEFAULT_CONFIG
 ta = TradingAgentsGraph(debug=True, config=DEFAULT_CONFIG.copy())
 
 # forward propagate
-_, decision = ta.propagate("NVDA", "2024-05-10")
+_, decision = ta.propagate("NVDA", "2026-01-15")
 print(decision)
 ```
 
@@ -161,24 +180,18 @@ You can also adjust the default configuration to set your own choice of LLMs, de
 from tradingagents.graph.trading_graph import TradingAgentsGraph
 from tradingagents.default_config import DEFAULT_CONFIG
 
-# Create a custom config
 config = DEFAULT_CONFIG.copy()
-config["deep_think_llm"] = "gpt-4.1-nano"  # Use a different model
-config["quick_think_llm"] = "gpt-4.1-nano"  # Use a different model
-config["max_debate_rounds"] = 1  # Increase debate rounds
-config["online_tools"] = True # Use online tools or cached data
+config["llm_provider"] = "openai"        # openai, google, anthropic, openrouter, ollama
+config["deep_think_llm"] = "gpt-5.2"     # Model for complex reasoning
+config["quick_think_llm"] = "gpt-5-mini" # Model for quick tasks
+config["max_debate_rounds"] = 2
 
-# Initialize with custom config
 ta = TradingAgentsGraph(debug=True, config=config)
-
-# forward propagate
-_, decision = ta.propagate("NVDA", "2024-05-10")
+_, decision = ta.propagate("NVDA", "2026-01-15")
 print(decision)
 ```
 
-> For `online_tools`, we recommend enabling them for experimentation, as they provide access to real-time data. The agents' offline tools rely on cached data from our **Tauric TradingDB**, a curated dataset we use for backtesting. We're currently in the process of refining this dataset, and we plan to release it soon alongside our upcoming projects. Stay tuned!
-
-You can view the full list of configurations in `tradingagents/default_config.py`.
+See `tradingagents/default_config.py` for all configuration options.
 
 ## Contributing
 
