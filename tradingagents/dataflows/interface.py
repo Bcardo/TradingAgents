@@ -25,6 +25,7 @@ from .alpha_vantage import (
 from .alpha_vantage_common import AlphaVantageRateLimitError
 from .reddit_sentiment import get_reddit_sentiment as get_reddit_sentiment_impl
 from .fear_greed import get_fear_greed as get_fear_greed_impl
+from .discord_sentiment import get_discord_uw_alerts as get_discord_uw_alerts_impl
 
 # Configuration and routing logic
 from .config import get_config
@@ -65,6 +66,7 @@ TOOLS_CATEGORIES = {
         "tools": [
             "get_reddit_sentiment",
             "get_market_fear_greed",
+            "get_unusual_whales_discord",
         ]
     }
 }
@@ -122,6 +124,9 @@ VENDOR_METHODS = {
     },
     "get_market_fear_greed": {
         "default": get_fear_greed_impl,
+    },
+    "get_unusual_whales_discord": {
+        "default": get_discord_uw_alerts_impl,
     },
 }
 
