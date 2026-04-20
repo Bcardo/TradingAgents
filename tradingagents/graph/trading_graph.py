@@ -37,7 +37,7 @@ from tradingagents.agents.utils.agent_utils import (
     get_insider_transactions,
     get_global_news
 )
-from tradingagents.agents.utils.sentiment_tools import get_reddit_sentiment, get_market_fear_greed
+from tradingagents.agents.utils.sentiment_tools import get_reddit_sentiment, get_market_fear_greed, get_unusual_whales_discord
 
 from .conditional_logic import ConditionalLogic
 from .setup import GraphSetup
@@ -164,6 +164,7 @@ class TradingAgentsGraph:
                 [
                     get_reddit_sentiment,
                     get_market_fear_greed,
+                    get_unusual_whales_discord,
                 ]
             ),
             "news": ToolNode(

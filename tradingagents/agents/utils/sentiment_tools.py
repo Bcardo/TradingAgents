@@ -18,6 +18,20 @@ def get_market_fear_greed(
 
 
 @tool
+def get_unusual_whales_discord(
+    ticker: Annotated[str, "Stock ticker symbol to filter alerts for, e.g. NVDA"],
+) -> str:
+    """
+    Fetch recent Unusual Whales options flow alerts for a ticker from a
+    configured Discord channel. Returns matching alerts from the last 24 hours
+    in the format: timestamp | TICKER $STRIKE Call/Put EXPIRY.
+    Requires DISCORD_TOKEN and DISCORD_UW_CHANNEL_ID environment variables.
+    Returns empty string silently when env vars are not configured.
+    """
+    return route_to_vendor("get_unusual_whales_discord", ticker)
+
+
+@tool
 def get_reddit_sentiment(
     ticker: Annotated[str, "Stock ticker symbol, e.g. NVDA or AAPL"],
     days: Annotated[int, "Number of past days to search for posts (default 3)"] = 3,

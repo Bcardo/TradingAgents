@@ -1,6 +1,6 @@
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from tradingagents.agents.utils.agent_utils import build_instrument_context, get_language_instruction
-from tradingagents.agents.utils.sentiment_tools import get_reddit_sentiment, get_market_fear_greed
+from tradingagents.agents.utils.sentiment_tools import get_reddit_sentiment, get_market_fear_greed, get_unusual_whales_discord
 from tradingagents.dataflows.config import get_config
 
 
@@ -12,6 +12,7 @@ def create_social_media_analyst(llm):
         tools = [
             get_reddit_sentiment,
             get_market_fear_greed,
+            get_unusual_whales_discord,
         ]
 
         system_message = (
@@ -24,11 +25,14 @@ def create_social_media_analyst(llm):
             "market-wide macro signal. Use it to contextualise retail sentiment: bullish "
             "Reddit posts carry more weight in a Greed market; bearish posts in an Extreme "
             "Fear market may signal capitulation.\n\n"
+            "Use get_unusual_whales_discord(ticker) to fetch recent options flow alerts "
+            "from Unusual Whales. If the tool returns empty (not configured), skip it and "
+            "continue with the other sources.\n\n"
             "If Reddit returns no posts (obscure or small-cap ticker), state that clearly — "
             "absence of retail coverage is itself a signal.\n\n"
             "Write a comprehensive sentiment report covering: overall retail mood (bullish / "
             "bearish / mixed), engagement level, notable narratives, current Fear & Greed "
-            "reading, and implications for short-term trader sentiment. "
+            "reading, any notable options flow, and implications for short-term trader sentiment. "
             "Append a Markdown table at the end summarising key data points."
             + get_language_instruction()
         )
