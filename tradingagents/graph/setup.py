@@ -34,6 +34,7 @@ class GraphSetup:
         Args:
             selected_analysts (list): List of analyst types to include. Options are:
                 - "market": Market analyst
+                - "options": Options flow analyst
                 - "social": Social media analyst
                 - "news": News analyst
                 - "fundamentals": Fundamentals analyst
@@ -52,6 +53,13 @@ class GraphSetup:
             )
             delete_nodes["market"] = create_msg_delete()
             tool_nodes["market"] = self.tool_nodes["market"]
+
+        if "options" in selected_analysts:
+            analyst_nodes["options"] = create_options_analyst(
+                self.quick_thinking_llm
+            )
+            delete_nodes["options"] = create_msg_delete()
+            tool_nodes["options"] = self.tool_nodes["options"]
 
         if "social" in selected_analysts:
             analyst_nodes["social"] = create_social_media_analyst(

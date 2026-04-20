@@ -26,6 +26,8 @@ from .alpha_vantage_common import AlphaVantageRateLimitError
 from .reddit_sentiment import get_reddit_sentiment as get_reddit_sentiment_impl
 from .fear_greed import get_fear_greed as get_fear_greed_impl
 from .discord_sentiment import get_discord_uw_alerts as get_discord_uw_alerts_impl
+from .options_flow import get_options_flow_data as get_options_flow_impl
+from .short_interest import get_short_interest_data as get_short_interest_impl
 
 # Configuration and routing logic
 from .config import get_config
@@ -68,7 +70,14 @@ TOOLS_CATEGORIES = {
             "get_market_fear_greed",
             "get_unusual_whales_discord",
         ]
-    }
+    },
+    "options_data": {
+        "description": "Options chain flow and short interest data",
+        "tools": [
+            "get_options_flow",
+            "get_short_interest",
+        ]
+    },
 }
 
 VENDOR_LIST = [
@@ -127,6 +136,13 @@ VENDOR_METHODS = {
     },
     "get_unusual_whales_discord": {
         "default": get_discord_uw_alerts_impl,
+    },
+    # options_data
+    "get_options_flow": {
+        "default": get_options_flow_impl,
+    },
+    "get_short_interest": {
+        "default": get_short_interest_impl,
     },
 }
 

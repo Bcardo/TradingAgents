@@ -31,6 +31,7 @@ DEFAULT_CONFIG = {
         "fundamental_data": "yfinance",      # Options: alpha_vantage, yfinance
         "news_data": "yfinance",             # Options: alpha_vantage, yfinance
         "sentiment_data": "default",        # Reddit, Fear&Greed, Discord UW (no vendor alt)
+        "options_data": "default",          # yfinance options chain + short interest (no vendor alt)
     },
     # Tool-level configuration (takes precedence over category-level)
     "tool_vendors": {
