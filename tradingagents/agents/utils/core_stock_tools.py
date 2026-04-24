@@ -4,6 +4,17 @@ from tradingagents.dataflows.interface import route_to_vendor
 
 
 @tool
+def get_current_price(
+    symbol: Annotated[str, "ticker symbol of the company"],
+) -> str:
+    """Get the current live price for a ticker (15-min delayed during market hours,
+    final close after hours). Use this to get today's price instead of get_stock_data
+    when you need the most up-to-date quote.
+    """
+    return route_to_vendor("get_current_price", symbol)
+
+
+@tool
 def get_stock_data(
     symbol: Annotated[str, "ticker symbol of the company"],
     start_date: Annotated[str, "Start date in yyyy-mm-dd format"],

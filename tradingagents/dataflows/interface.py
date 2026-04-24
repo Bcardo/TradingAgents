@@ -3,6 +3,7 @@ from typing import Annotated
 # Import from vendor-specific modules
 from .y_finance import (
     get_YFin_data_online,
+    get_current_price as get_yfinance_current_price,
     get_stock_stats_indicators_window,
     get_fundamentals as get_yfinance_fundamentals,
     get_balance_sheet as get_yfinance_balance_sheet,
@@ -37,7 +38,8 @@ TOOLS_CATEGORIES = {
     "core_stock_apis": {
         "description": "OHLCV stock price data",
         "tools": [
-            "get_stock_data"
+            "get_stock_data",
+            "get_current_price",
         ]
     },
     "technical_indicators": {
@@ -91,6 +93,9 @@ VENDOR_METHODS = {
     "get_stock_data": {
         "alpha_vantage": get_alpha_vantage_stock,
         "yfinance": get_YFin_data_online,
+    },
+    "get_current_price": {
+        "default": get_yfinance_current_price,
     },
     # technical_indicators
     "get_indicators": {
