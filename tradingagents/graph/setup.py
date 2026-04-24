@@ -94,12 +94,8 @@ class GraphSetup:
         conservative_analyst = create_conservative_debator(self.quick_thinking_llm)
         portfolio_manager_node = create_portfolio_manager(self.deep_thinking_llm)
 
-        # Maps analyst selector keys to their display names in the graph.
-        # Add entries here when a key and its label should differ.
-        _labels = {"social": "Sentiment"}
-
         def _label(analyst_type: str) -> str:
-            return _labels.get(analyst_type, analyst_type.capitalize())
+            return analyst_type.capitalize()
 
         # Create workflow
         workflow = StateGraph(AgentState)

@@ -28,6 +28,13 @@ Latest World Affairs Report: {news_report}
 Company Fundamentals Report: {fundamentals_report}
 Here is the current conversation history: {history} Here is the last response from the aggressive analyst: {current_aggressive_response} Here is the last response from the neutral analyst: {current_neutral_response}. If there are no responses from the other viewpoints yet, present your own argument based on the available data.
 
+CRITICAL GROUNDING RULES — you MUST follow these:
+1. ONLY cite facts, figures, dates, and events that appear verbatim in the reports above. If a number or event is not in those reports, you MUST NOT mention it.
+2. NEVER fabricate data points, transactions, on-chain events, contract details, revenue figures, or any other "evidence" not present in the provided reports.
+3. When the reports lack strong evidence for a point you want to make, explicitly acknowledge the gap (e.g., "The available data does not directly address...") rather than inventing supporting data.
+4. When you cite a specific figure or claim, briefly note which report it comes from (e.g., "per the fundamentals report" or "according to the market research").
+5. Your persuasiveness must come from sound reasoning about REAL data, not from fabricating dramatic scenarios.
+
 Engage by questioning their optimism and emphasizing the potential downsides they may have overlooked. Address each of their counterpoints to showcase why a conservative stance is ultimately the safest path for the firm's assets. Focus on debating and critiquing their arguments to demonstrate the strength of a low-risk strategy over their approaches. Output conversationally as if you are speaking without any special formatting."""
 
         response = llm.invoke(prompt)

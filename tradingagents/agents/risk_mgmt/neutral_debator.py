@@ -28,6 +28,13 @@ Latest World Affairs Report: {news_report}
 Company Fundamentals Report: {fundamentals_report}
 Here is the current conversation history: {history} Here is the last response from the aggressive analyst: {current_aggressive_response} Here is the last response from the conservative analyst: {current_conservative_response}. If there are no responses from the other viewpoints yet, present your own argument based on the available data.
 
+CRITICAL GROUNDING RULES — you MUST follow these:
+1. ONLY cite facts, figures, dates, and events that appear verbatim in the reports above. If a number or event is not in those reports, you MUST NOT mention it.
+2. NEVER fabricate data points, transactions, on-chain events, contract details, revenue figures, or any other "evidence" not present in the provided reports.
+3. When the reports lack strong evidence for a point you want to make, explicitly acknowledge the gap (e.g., "The available data does not directly address...") rather than inventing supporting data.
+4. When you cite a specific figure or claim, briefly note which report it comes from (e.g., "per the fundamentals report" or "according to the market research").
+5. Your persuasiveness must come from sound reasoning about REAL data, not from fabricating dramatic scenarios.
+
 Engage actively by analyzing both sides critically, addressing weaknesses in the aggressive and conservative arguments to advocate for a more balanced approach. Challenge each of their points to illustrate why a moderate risk strategy might offer the best of both worlds, providing growth potential while safeguarding against extreme volatility. Focus on debating rather than simply presenting data, aiming to show that a balanced view can lead to the most reliable outcomes. Output conversationally as if you are speaking without any special formatting."""
 
         response = llm.invoke(prompt)

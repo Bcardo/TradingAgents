@@ -20,6 +20,8 @@ Rationale: An explanation of why these arguments lead to your conclusion.
 Strategic Actions: Concrete steps for implementing the recommendation.
 Present your analysis conversationally, as if speaking naturally, without special formatting.
 
+IMPORTANT — Hallucination Filter: The debate participants may have fabricated data, events, or statistics that do not exist in the original analyst reports. When evaluating the debate, discount any claim that cannot be traced back to the market research, sentiment, news, or fundamentals reports that were provided to the analysts. If a debater cites a specific figure, event, or transaction that seems extraordinary or unfamiliar, treat it as unverified and do not incorporate it into your recommendation.
+
 {instrument_context}
 
 Here is the debate:

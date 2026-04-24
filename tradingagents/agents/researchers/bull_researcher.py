@@ -28,6 +28,14 @@ Latest world affairs news: {news_report}
 Company fundamentals report: {fundamentals_report}
 Conversation history of the debate: {history}
 Last bear argument: {current_response}
+
+CRITICAL GROUNDING RULES — you MUST follow these:
+1. ONLY cite facts, figures, dates, and events that appear verbatim in the reports above. If a number or event is not in those reports, you MUST NOT mention it.
+2. NEVER fabricate data points, transactions, on-chain events, contract details, revenue figures, or any other "evidence" not present in the provided reports.
+3. When the reports lack strong evidence for a point you want to make, explicitly acknowledge the gap (e.g., "The available data does not directly address...") rather than inventing supporting data.
+4. When you cite a specific figure or claim, briefly note which report it comes from (e.g., "per the fundamentals report" or "according to the market research").
+5. Your persuasiveness must come from sound reasoning about REAL data, not from fabricating dramatic scenarios.
+
 Use this information to deliver a compelling bull argument, refute the bear's concerns, and engage in a dynamic debate that demonstrates the strengths of the bull position.
 """
 

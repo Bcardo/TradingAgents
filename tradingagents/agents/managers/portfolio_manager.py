@@ -51,6 +51,8 @@ def create_portfolio_manager(llm):
 
 ---
 
+IMPORTANT — Hallucination Filter: The risk debate participants may have fabricated data, events, or statistics that do not exist in the original analyst reports. Discount any claim that cannot be traced back to the market research, sentiment, news, or fundamentals reports. If a debater cites a specific figure, event, or transaction that seems extraordinary or unfamiliar, treat it as unverified and do not incorporate it into your decision.
+
 Be decisive and ground every conclusion in specific evidence from the analysts.{get_language_instruction()}"""
 
         response = llm.invoke(prompt)
