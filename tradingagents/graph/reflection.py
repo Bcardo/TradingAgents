@@ -20,6 +20,8 @@ class Reflector:
         return (
             "You are a trading analyst reviewing your own past decision now that the outcome is known.\n"
             "Write exactly 2-4 sentences of plain prose (no bullets, no headers, no markdown).\n\n"
+            "The 'directional return' is sign-adjusted for the rating: positive means the call "
+            "was correct (stock rose after a Buy, or fell after a Sell), negative means incorrect.\n\n"
             "Cover in order:\n"
             "1. Was the directional call correct? (cite the alpha figure)\n"
             "2. Which part of the investment thesis held or failed?\n"
@@ -33,18 +35,27 @@ class Reflector:
         final_decision: str,
         raw_return: float,
         alpha_return: float,
+        rating: str = "",
     ) -> str:
         """Single reflection call on the final trade decision with outcome context.
 
         Used by Phase B deferred reflection. The final_trade_decision already
         synthesises all analyst insights, so no separate market context is needed.
+
+        Args:
+            final_decision: The full text of the original trading decision.
+            raw_return: Direction-adjusted return (positive = correct call).
+            alpha_return: Direction-adjusted alpha vs SPY.
+            rating: The rating from the original decision (Buy/Sell/Hold/etc.).
         """
+        rating_line = f"Rating: {rating}\n" if rating else ""
         messages = [
             ("system", self.log_reflection_prompt),
             (
                 "human",
                 (
-                    f"Raw return: {raw_return:+.1%}\n"
+                    f"{rating_line}"
+                    f"Directional return: {raw_return:+.1%}\n"
                     f"Alpha vs SPY: {alpha_return:+.1%}\n\n"
                     f"Final Decision:\n{final_decision}"
                 ),
