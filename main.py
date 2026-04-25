@@ -8,9 +8,12 @@ load_dotenv()
 
 # Create a custom config
 config = DEFAULT_CONFIG.copy()
-config["deep_think_llm"] = "gpt-5.4-mini"  # Use a different model
-config["quick_think_llm"] = "gpt-5.4-mini"  # Use a different model
+config["deep_think_llm"] = "qwen3.6-plus"   # Qwen3.6 (commercial)
+config["quick_think_llm"] = "qwen3.5-flash"  # Qwen3.5 (commercial)
 config["max_debate_rounds"] = 1  # Increase debate rounds
+config["max_recur_limit"] = 300  # Increase recursion limit for deeper thinking
+config["llm_provider"] = "qwen"
+
 
 # Configure data vendors (default uses yfinance, no extra API keys needed)
 config["data_vendors"] = {
@@ -24,8 +27,7 @@ config["data_vendors"] = {
 ta = TradingAgentsGraph(debug=True, config=config)
 
 # forward propagate
-_, decision = ta.propagate("NVDA", "2024-05-10")
+_, decision = ta.propagate("MSFT", "2024-06-10")
 print(decision)
-
-# Memorize mistakes and reflect
-# ta.reflect_and_remember(1000) # parameter is the position returns
+print("\n--- Memory log entries:", len(ta.memory_log.load_entries()), "---")
+print(ta.memory_log.get_past_context("MSFT") or "(no past context yet)")
