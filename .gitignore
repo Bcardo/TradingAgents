@@ -220,3 +220,7 @@ __marimo__/
 
 # Cache
 **/data_cache/
+
+# Documentation images (hosted on GitHub, not tracked in git)
+assets/
+push_to_hf.py
