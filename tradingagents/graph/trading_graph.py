@@ -37,6 +37,11 @@ from tradingagents.agents.utils.agent_utils import (
     get_insider_transactions,
     get_global_news
 )
+from tradingagents.agents.utils.sentiment_tools import (
+    get_reddit_sentiment,
+    get_market_fear_greed,
+    get_unusual_whales_discord,
+)
 
 from .checkpointer import checkpoint_step, clear_checkpoint, get_checkpointer, thread_id
 from .conditional_logic import ConditionalLogic
@@ -164,8 +169,9 @@ class TradingAgentsGraph:
             ),
             "social": ToolNode(
                 [
-                    # News tools for social media analysis
-                    get_news,
+                    get_reddit_sentiment,
+                    get_market_fear_greed,
+                    get_unusual_whales_discord,
                 ]
             ),
             "news": ToolNode(
