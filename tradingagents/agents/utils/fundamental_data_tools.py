@@ -75,3 +75,37 @@ def get_income_statement(
         str: A formatted report containing income statement data
     """
     return route_to_vendor("get_income_statement", ticker, freq, curr_date)
+
+
+@tool
+def get_analyst_consensus(
+    ticker: Annotated[str, "ticker symbol"],
+    curr_date: Annotated[str, "current date you are trading at, yyyy-mm-dd"],
+) -> str:
+    """
+    Retrieve analyst buy/hold/sell consensus and price targets for a ticker.
+    Uses Finnhub /stock/recommendation and /stock/price-target.
+    Args:
+        ticker (str): Ticker symbol of the company
+        curr_date (str): Current date you are trading at, yyyy-mm-dd
+    Returns:
+        str: Formatted analyst consensus report
+    """
+    return route_to_vendor("get_analyst_consensus", ticker, curr_date)
+
+
+@tool
+def get_earnings_surprise(
+    ticker: Annotated[str, "ticker symbol"],
+    curr_date: Annotated[str, "current date you are trading at, yyyy-mm-dd"],
+) -> str:
+    """
+    Retrieve last 4 quarters of EPS actual vs estimate and surprise % for a ticker.
+    Uses Finnhub /stock/earnings.
+    Args:
+        ticker (str): Ticker symbol of the company
+        curr_date (str): Current date you are trading at, yyyy-mm-dd
+    Returns:
+        str: Formatted earnings surprise table
+    """
+    return route_to_vendor("get_earnings_surprise", ticker, curr_date)

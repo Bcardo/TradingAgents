@@ -24,6 +24,20 @@ from .alpha_vantage import (
     get_global_news as get_alpha_vantage_global_news,
 )
 from .alpha_vantage_common import AlphaVantageRateLimitError
+from .finnhub import (
+    FinnhubUnavailableError,
+    get_stock_data as get_finnhub_stock_data,
+    get_current_price as get_finnhub_current_price,
+    get_indicators as get_finnhub_indicators,
+    get_fundamentals as get_finnhub_fundamentals,
+    get_balance_sheet as get_finnhub_balance_sheet,
+    get_cashflow as get_finnhub_cashflow,
+    get_income_statement as get_finnhub_income_statement,
+    get_insider_transactions as get_finnhub_insider_transactions,
+    get_news as get_finnhub_news,
+    get_analyst_consensus as get_finnhub_analyst_consensus,
+    get_earnings_surprise as get_finnhub_earnings_surprise,
+)
 from .reddit_sentiment import get_reddit_sentiment as get_reddit_sentiment_impl
 from .fear_greed import get_fear_greed as get_fear_greed_impl
 from .discord_sentiment import get_discord_uw_alerts as get_discord_uw_alerts_impl
@@ -54,7 +68,9 @@ TOOLS_CATEGORIES = {
             "get_fundamentals",
             "get_balance_sheet",
             "get_cashflow",
-            "get_income_statement"
+            "get_income_statement",
+            "get_analyst_consensus",
+            "get_earnings_surprise",
         ]
     },
     "news_data": {
@@ -85,42 +101,51 @@ TOOLS_CATEGORIES = {
 VENDOR_LIST = [
     "yfinance",
     "alpha_vantage",
+    "finnhub",
 ]
 
 # Mapping of methods to their vendor-specific implementations
 VENDOR_METHODS = {
     # core_stock_apis
     "get_stock_data": {
+        "finnhub": get_finnhub_stock_data,
         "alpha_vantage": get_alpha_vantage_stock,
         "yfinance": get_YFin_data_online,
     },
     "get_current_price": {
-        "default": get_yfinance_current_price,
+        "finnhub": get_finnhub_current_price,
+        "yfinance": get_yfinance_current_price,
     },
     # technical_indicators
     "get_indicators": {
+        "finnhub": get_finnhub_indicators,
         "alpha_vantage": get_alpha_vantage_indicator,
         "yfinance": get_stock_stats_indicators_window,
     },
     # fundamental_data
     "get_fundamentals": {
+        "finnhub": get_finnhub_fundamentals,
         "alpha_vantage": get_alpha_vantage_fundamentals,
         "yfinance": get_yfinance_fundamentals,
     },
     "get_balance_sheet": {
+        "finnhub": get_finnhub_balance_sheet,
         "alpha_vantage": get_alpha_vantage_balance_sheet,
         "yfinance": get_yfinance_balance_sheet,
     },
     "get_cashflow": {
+        "finnhub": get_finnhub_cashflow,
         "alpha_vantage": get_alpha_vantage_cashflow,
         "yfinance": get_yfinance_cashflow,
     },
     "get_income_statement": {
+        "finnhub": get_finnhub_income_statement,
         "alpha_vantage": get_alpha_vantage_income_statement,
         "yfinance": get_yfinance_income_statement,
     },
     # news_data
     "get_news": {
+        "finnhub": get_finnhub_news,
         "alpha_vantage": get_alpha_vantage_news,
         "yfinance": get_news_yfinance,
     },
@@ -129,8 +154,16 @@ VENDOR_METHODS = {
         "alpha_vantage": get_alpha_vantage_global_news,
     },
     "get_insider_transactions": {
+        "finnhub": get_finnhub_insider_transactions,
         "alpha_vantage": get_alpha_vantage_insider_transactions,
         "yfinance": get_yfinance_insider_transactions,
+    },
+    # fundamental_data — Finnhub-only tools (no yfinance equivalent)
+    "get_analyst_consensus": {
+        "default": get_finnhub_analyst_consensus,
+    },
+    "get_earnings_surprise": {
+        "default": get_finnhub_earnings_surprise,
     },
     # sentiment_data
     "get_reddit_sentiment": {
@@ -198,7 +231,7 @@ def route_to_vendor(method: str, *args, **kwargs):
 
         try:
             return impl_func(*args, **kwargs)
-        except AlphaVantageRateLimitError:
-            continue  # Only rate limits trigger fallback
+        except (AlphaVantageRateLimitError, FinnhubUnavailableError):
+            continue  # Vendor unavailable — try next in chain
 
     raise RuntimeError(f"No available vendor for '{method}'")

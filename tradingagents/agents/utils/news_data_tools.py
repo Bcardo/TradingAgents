@@ -1,6 +1,7 @@
 from langchain_core.tools import tool
 from typing import Annotated
 from tradingagents.dataflows.interface import route_to_vendor
+from tradingagents.dataflows.sec_edgar import get_sec_filings as _get_sec_filings_impl
 
 @tool
 def get_news(
@@ -51,3 +52,21 @@ def get_insider_transactions(
         str: A report of insider transaction data
     """
     return route_to_vendor("get_insider_transactions", ticker)
+
+
+@tool
+def get_sec_filings(
+    ticker: Annotated[str, "ticker symbol"],
+    curr_date: Annotated[str, "current date you are trading at, yyyy-mm-dd"],
+) -> str:
+    """
+    Retrieve recent SEC 8-K filing metadata for a US-listed ticker.
+    Covers the 30 days before curr_date. Non-US or unknown tickers return a
+    graceful no-data message. No API key required.
+    Args:
+        ticker (str): Ticker symbol of the company
+        curr_date (str): Current date you are trading at, yyyy-mm-dd
+    Returns:
+        str: Formatted list of 8-K filing dates and accession numbers
+    """
+    return _get_sec_filings_impl(ticker, curr_date)

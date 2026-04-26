@@ -34,9 +34,12 @@ from tradingagents.agents.utils.agent_utils import (
     get_balance_sheet,
     get_cashflow,
     get_income_statement,
+    get_analyst_consensus,
+    get_earnings_surprise,
     get_news,
     get_insider_transactions,
-    get_global_news
+    get_global_news,
+    get_sec_filings,
 )
 from tradingagents.agents.utils.sentiment_tools import (
     get_reddit_sentiment,
@@ -180,6 +183,7 @@ class TradingAgentsGraph:
                     get_news,
                     get_global_news,
                     get_insider_transactions,
+                    get_sec_filings,
                 ]
             ),
             "fundamentals": ToolNode(
@@ -189,6 +193,8 @@ class TradingAgentsGraph:
                     get_balance_sheet,
                     get_cashflow,
                     get_income_statement,
+                    get_analyst_consensus,
+                    get_earnings_surprise,
                 ]
             ),
         }

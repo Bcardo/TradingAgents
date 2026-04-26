@@ -29,12 +29,12 @@ DEFAULT_CONFIG = {
     # Data vendor configuration
     # Category-level configuration (default for all tools in category)
     "data_vendors": {
-        "core_stock_apis": "yfinance",       # Options: alpha_vantage, yfinance
-        "technical_indicators": "yfinance",  # Options: alpha_vantage, yfinance
-        "fundamental_data": "yfinance",      # Options: alpha_vantage, yfinance
-        "news_data": "yfinance",             # Options: alpha_vantage, yfinance
-        "sentiment_data": "default",        # Reddit, Fear&Greed, Discord UW (no vendor alt)
-        "options_data": "default",          # yfinance options chain + short interest (no vendor alt)
+        "core_stock_apis": "finnhub,yfinance",       # Options: finnhub, alpha_vantage, yfinance
+        "technical_indicators": "finnhub,yfinance",  # Options: finnhub, alpha_vantage, yfinance
+        "fundamental_data": "finnhub,yfinance",      # Options: finnhub, alpha_vantage, yfinance
+        "news_data": "finnhub,yfinance",             # Options: finnhub, alpha_vantage, yfinance
+        "sentiment_data": "default",                 # Reddit, Fear&Greed, Discord UW (no vendor alt)
+        "options_data": "default",                   # yfinance options chain + short interest (no vendor alt)
     },
     # Tool-level configuration (takes precedence over category-level)
     "tool_vendors": {
