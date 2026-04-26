@@ -11,6 +11,8 @@ def create_research_manager(llm):
 
         prompt = f"""As the portfolio manager and debate facilitator, your role is to critically evaluate this round of debate and make a definitive decision: align with the bear analyst, the bull analyst, or choose Hold only if it is strongly justified based on the arguments presented.
 
+When evaluating the debate, apply healthy skepticism to specific figures, statistics, and events cited by debaters — they are instructed to ground their arguments in the fetched data, but may still introduce plausible-sounding details from outside it. Favour claims that are well-attributed, corroborated by both sides, or clearly derived from the available market, news, sentiment, and fundamentals data. Discount isolated extraordinary claims that appear only in one debater's argument without supporting evidence.
+
 Summarize the key points from both sides concisely, focusing on the most compelling evidence or reasoning. Your recommendation—Buy, Sell, or Hold—must be clear and actionable. Avoid defaulting to Hold simply because both sides have valid points; commit to a stance grounded in the debate's strongest arguments.
 
 Additionally, develop a detailed investment plan for the trader. This should include:
@@ -19,8 +21,6 @@ Your Recommendation: A decisive stance supported by the most convincing argument
 Rationale: An explanation of why these arguments lead to your conclusion.
 Strategic Actions: Concrete steps for implementing the recommendation.
 Present your analysis conversationally, as if speaking naturally, without special formatting.
-
-IMPORTANT — Hallucination Filter: The debate participants may have fabricated data, events, or statistics that do not exist in the original analyst reports. When evaluating the debate, discount any claim that cannot be traced back to the market research, sentiment, news, or fundamentals reports that were provided to the analysts. If a debater cites a specific figure, event, or transaction that seems extraordinary or unfamiliar, treat it as unverified and do not incorporate it into your recommendation.
 
 {instrument_context}
 
