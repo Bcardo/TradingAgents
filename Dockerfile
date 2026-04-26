@@ -24,5 +24,5 @@ WORKDIR /home/appuser/app
 
 COPY --from=builder --chown=appuser:appuser /build .
 
-ENTRYPOINT ["tradingagents"]
+EXPOSE 7860
 CMD ["python", "web/app.py"]
