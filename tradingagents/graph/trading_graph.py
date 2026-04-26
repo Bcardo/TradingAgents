@@ -250,10 +250,17 @@ class TradingAgentsGraph:
             raw, alpha, days = self._fetch_returns(ticker, entry["date"])
             if raw is None:
                 continue  # price not available yet — try again next run
+            # Sign-adjust for bearish ratings: a stock falling after Sell/Underweight
+            # is a correct call, so we flip the sign so positive = correct.
+            rating = entry.get("rating", "")
+            if rating.lower() in ("sell", "underweight"):
+                raw = -raw
+                alpha = -alpha
             reflection = self.reflector.reflect_on_final_decision(
                 final_decision=entry.get("decision", ""),
                 raw_return=raw,
                 alpha_return=alpha,
+                rating=rating,
             )
             updates.append({
                 "ticker": ticker,
