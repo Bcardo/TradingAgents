@@ -46,6 +46,10 @@ from tradingagents.agents.utils.sentiment_tools import (
     get_market_fear_greed,
     get_unusual_whales_discord,
 )
+from tradingagents.agents.utils.options_tools import (
+    get_options_flow,
+    get_short_interest,
+)
 
 from .checkpointer import checkpoint_step, clear_checkpoint, get_checkpointer, thread_id
 from .conditional_logic import ConditionalLogic
@@ -195,6 +199,12 @@ class TradingAgentsGraph:
                     get_income_statement,
                     get_analyst_consensus,
                     get_earnings_surprise,
+                ]
+            ),
+            "options": ToolNode(
+                [
+                    get_options_flow,
+                    get_short_interest,
                 ]
             ),
         }
