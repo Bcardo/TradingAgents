@@ -133,17 +133,17 @@ memory_log = TradingMemoryLog(DEFAULT_CONFIG)
 
 
 def load_history() -> list:
-    """Return past analyses as rows for the history dataframe, most recent first."""
+    """Return last 10 analyses as rows for the history dataframe, most recent first."""
     entries = memory_log.load_entries()
     rows = []
-    for e in reversed(entries):
+    for e in reversed(entries[-10:]):
         signal = (e.get("rating") or "hold").lower()
         emoji = SIGNAL_EMOJI.get(signal, "⚪")
         rows.append([
             e.get("date", ""),
             e.get("ticker", ""),
             f"{emoji} {signal.capitalize()}",
-            (e.get("decision") or "")[:120],
+            (e.get("decision") or "")[:80],
         ])
     return rows
 
@@ -320,7 +320,7 @@ def run_analysis(ticker: str, date: str, analysts: list[str]):
     thread.start()
 
     # --- Disable button, then stream real phase every 2s ---
-    yield gr.update(interactive=False), "", "", gr.update()
+    yield gr.update(interactive=False), "", "", gr.update(), gr.update()
 
     start = time.time()
     while not shared["done"]:
@@ -331,11 +331,12 @@ def run_analysis(ticker: str, date: str, analysts: list[str]):
             "_Analysis takes 5–15 minutes depending on your LLM provider._",
             "",
             gr.update(),
+            gr.update(),
         )
         time.sleep(2)
 
     if shared["error"]:
-        yield gr.update(interactive=True), f"❌ **Error:** {shared['error']}", "", gr.update()
+        yield gr.update(interactive=True), f"❌ **Error:** {shared['error']}", "", gr.update(), gr.update()
         return
 
     final_state, signal, formatted = shared["result"]
@@ -345,6 +346,7 @@ def run_analysis(ticker: str, date: str, analysts: list[str]):
         f"✅ **Done** in {elapsed}s",
         formatted,
         {"ticker": ticker, "date": date, "analysts": analysts, "result": formatted},
+        load_history(),
     )
 
 
@@ -365,8 +367,9 @@ with gr.Blocks(title="TradingAgents") as demo:
         headers=["Date", "Ticker", "Signal", "Decision"],
         interactive=False,
         wrap=True,
-        label="Past Analyses",
+        label="Past Analyses (click a row to expand)",
     )
+    decision_box = gr.Markdown(visible=False)
 
     with gr.Row():
         ticker_box = gr.Textbox(
@@ -421,18 +424,26 @@ with gr.Blocks(title="TradingAgents") as demo:
 
     def _on_history_select(evt: gr.SelectData, df):
         row_idx = evt.index[0]
-        return str(df.iloc[row_idx, 1]), str(df.iloc[row_idx, 0])  # ticker, date
+        ticker = str(df.iloc[row_idx, 1])
+        date_val = str(df.iloc[row_idx, 0])
+        decision = ""
+        for e in memory_log.load_entries():
+            if e.get("ticker") == ticker and e.get("date") == date_val:
+                decision = e.get("decision", "")
+                break
+        decision_md = f"### {ticker} — {date_val}\n\n{decision}" if decision else ""
+        return ticker, date_val, gr.update(value=decision_md, visible=bool(decision_md))
 
     history_df.select(
         fn=_on_history_select,
         inputs=[history_df],
-        outputs=[ticker_box, date_box],
+        outputs=[ticker_box, date_box, decision_box],
     )
 
     analyze_btn.click(
         fn=run_analysis,
         inputs=[ticker_box, date_box, analysts_box],
-        outputs=[analyze_btn, status_box, result_box, saved],
+        outputs=[analyze_btn, status_box, result_box, saved, history_df],
     )
 
 demo.queue(max_size=5)  # serialize requests; friends queue rather than collide
