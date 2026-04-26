@@ -36,6 +36,7 @@ load_dotenv()
 
 from tradingagents.graph.trading_graph import TradingAgentsGraph
 from tradingagents.default_config import DEFAULT_CONFIG
+from tradingagents.agents.utils.memory import TradingMemoryLog
 
 # ---------------------------------------------------------------------------
 # S3 memory sync (optional — skipped if env vars not set)
@@ -87,6 +88,33 @@ def _s3_upload_memory(local_path: Path) -> None:
     except Exception as exc:
         logger.warning("S3 upload failed (memory saved locally only): %s", exc)
 
+
+def _s3_upload_report(markdown: str) -> None:
+    """Upload full formatted report markdown to fixed S3 key. No-op if S3 not configured."""
+    s3 = _get_s3()
+    if not s3:
+        return
+    try:
+        s3.put_object(Bucket=_S3_BUCKET, Key="reports/last_report.md", Body=markdown.encode("utf-8"))
+        logger.info("Report uploaded to s3://%s/reports/last_report.md", _S3_BUCKET)
+    except Exception as exc:
+        logger.warning("S3 report upload failed: %s", exc)
+
+
+def _s3_download_report() -> str:
+    """Download last report markdown from S3. Returns '' if not configured or key missing."""
+    s3 = _get_s3()
+    if not s3:
+        return ""
+    try:
+        resp = s3.get_object(Bucket=_S3_BUCKET, Key="reports/last_report.md")
+        return resp["Body"].read().decode("utf-8")
+    except Exception as exc:
+        code = getattr(exc, "response", {}).get("Error", {}).get("Code", "")
+        if code not in ("404", "NoSuchKey"):
+            logger.warning("S3 report download failed: %s", exc)
+        return ""
+
 # ---------------------------------------------------------------------------
 # Configuration
 # ---------------------------------------------------------------------------
@@ -100,6 +128,25 @@ DEEP_MODEL    = os.environ.get("WEB_DEEP_MODEL",    DEFAULT_CONFIG["deep_think_l
 QUICK_MODEL   = os.environ.get("WEB_QUICK_MODEL",   DEFAULT_CONFIG["quick_think_llm"])
 BACKEND_URL   = os.environ.get("WEB_BACKEND_URL",   DEFAULT_CONFIG.get("backend_url"))
 PORT          = int(os.environ.get("GRADIO_PORT", "7860"))
+
+memory_log = TradingMemoryLog(DEFAULT_CONFIG)
+
+
+def load_history() -> list:
+    """Return past analyses as rows for the history dataframe, most recent first."""
+    entries = memory_log.load_entries()
+    rows = []
+    for e in reversed(entries):
+        signal = (e.get("rating") or "hold").lower()
+        emoji = SIGNAL_EMOJI.get(signal, "⚪")
+        rows.append([
+            e.get("date", ""),
+            e.get("ticker", ""),
+            f"{emoji} {signal.capitalize()}",
+            (e.get("decision") or "")[:120],
+        ])
+    return rows
+
 
 def _build_config() -> dict:
     config = DEFAULT_CONFIG.copy()
@@ -261,7 +308,9 @@ def run_analysis(ticker: str, date: str, analysts: list[str]):
             )
             _s3_upload_memory(_MEMORY_PATH)
             signal = ta.process_signal(final_state["final_trade_decision"])
-            shared["result"] = (final_state, signal)
+            formatted = _format_result(final_state, signal)
+            _s3_upload_report(formatted)
+            shared["result"] = (final_state, signal, formatted)
         except Exception as exc:
             shared["error"] = str(exc)
         finally:
@@ -271,7 +320,7 @@ def run_analysis(ticker: str, date: str, analysts: list[str]):
     thread.start()
 
     # --- Disable button, then stream real phase every 2s ---
-    yield gr.update(interactive=False), "", ""
+    yield gr.update(interactive=False), "", "", gr.update()
 
     start = time.time()
     while not shared["done"]:
@@ -281,16 +330,22 @@ def run_analysis(ticker: str, date: str, analysts: list[str]):
             f"⏳ **{shared['phase']}** &nbsp;&nbsp; `{elapsed}s elapsed`\n\n"
             "_Analysis takes 5–15 minutes depending on your LLM provider._",
             "",
+            gr.update(),
         )
         time.sleep(2)
 
     if shared["error"]:
-        yield gr.update(interactive=True), f"❌ **Error:** {shared['error']}", ""
+        yield gr.update(interactive=True), f"❌ **Error:** {shared['error']}", "", gr.update()
         return
 
-    final_state, signal = shared["result"]
+    final_state, signal, formatted = shared["result"]
     elapsed = int(time.time() - start)
-    yield gr.update(interactive=True), f"✅ **Done** in {elapsed}s", _format_result(final_state, signal)
+    yield (
+        gr.update(interactive=True),
+        f"✅ **Done** in {elapsed}s",
+        formatted,
+        {"ticker": ticker, "date": date, "analysts": analysts, "result": formatted},
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -304,6 +359,13 @@ with gr.Blocks(title="TradingAgents") as demo:
     gr.Markdown(
         "# TradingAgents\n"
         "Multi-agent LLM financial analysis — enter a ticker and date to get a trading decision."
+    )
+
+    history_df = gr.Dataframe(
+        headers=["Date", "Ticker", "Signal", "Decision"],
+        interactive=False,
+        wrap=True,
+        label="Past Analyses",
     )
 
     with gr.Row():
@@ -329,10 +391,48 @@ with gr.Blocks(title="TradingAgents") as demo:
     status_box = gr.Markdown(value="")
     result_box = gr.Markdown(value="")
 
+    saved = gr.BrowserState({
+        "ticker": "SPY",
+        "date": today,
+        "analysts": ["market", "social", "news", "fundamentals"],
+        "result": "",
+    })
+
+    def _restore_state(saved: dict):
+        result = saved.get("result", "")
+        if not result and _S3_BUCKET:
+            result = _s3_download_report()
+            if result:
+                saved = {**saved, "result": result}
+        return (
+            saved.get("ticker", "SPY"),
+            saved.get("date", today),
+            saved.get("analysts", ["market", "social", "news", "fundamentals"]),
+            result,
+            saved,
+        )
+
+    demo.load(
+        fn=_restore_state,
+        inputs=[saved],
+        outputs=[ticker_box, date_box, analysts_box, result_box, saved],
+    )
+    demo.load(fn=load_history, outputs=[history_df])
+
+    def _on_history_select(evt: gr.SelectData, df):
+        row_idx = evt.index[0]
+        return str(df.iloc[row_idx, 1]), str(df.iloc[row_idx, 0])  # ticker, date
+
+    history_df.select(
+        fn=_on_history_select,
+        inputs=[history_df],
+        outputs=[ticker_box, date_box],
+    )
+
     analyze_btn.click(
         fn=run_analysis,
         inputs=[ticker_box, date_box, analysts_box],
-        outputs=[analyze_btn, status_box, result_box],
+        outputs=[analyze_btn, status_box, result_box, saved],
     )
 
 demo.queue(max_size=5)  # serialize requests; friends queue rather than collide
