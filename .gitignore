@@ -224,3 +224,6 @@ __marimo__/
 # Documentation images (hosted on GitHub, not tracked in git)
 assets/
 push_to_hf.py
+
+# OpenSpec tool config (local only)
+openspec/config.yaml
