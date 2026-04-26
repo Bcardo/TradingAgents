@@ -420,3 +420,21 @@ def get_insider_transactions(
         
     except Exception as e:
         return f"Error retrieving insider transactions for {ticker}: {str(e)}"
+
+
+def get_current_price(symbol: str) -> str:
+    """Get the current live price for a ticker (15-min delayed during market hours,
+    final close after hours)."""
+    try:
+        ticker_obj = yf.Ticker(symbol.upper())
+        info = yf_retry(lambda: ticker_obj.fast_info)
+        price = getattr(info, "last_price", None)
+        if price is None:
+            hist = yf_retry(lambda: ticker_obj.history(period="1d"))
+            if hist is not None and not hist.empty:
+                price = hist["Close"].iloc[-1]
+        if price is None:
+            return f"Could not retrieve current price for {symbol.upper()}"
+        return f"Current price for {symbol.upper()}: ${price:.2f}"
+    except Exception as e:
+        return f"Error retrieving current price for {symbol}: {str(e)}"
