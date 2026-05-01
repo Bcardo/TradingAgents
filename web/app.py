@@ -166,8 +166,11 @@ def _parse_users() -> list[tuple[str, str]] | None:
     """Parse GRADIO_USERS env var.
 
     Format: "alice:pw1,bob:pw2"
-    Returns None (no auth) if the variable is unset or empty.
+    Returns None (no auth) if the variable is unset or empty, or if
+    GRADIO_AUTH_ENABLED is explicitly set to "false" / "0" (demo mode).
     """
+    if os.environ.get("GRADIO_AUTH_ENABLED", "true").strip().lower() in ("false", "0"):
+        return None
     raw = os.environ.get("GRADIO_USERS", "").strip()
     if not raw:
         return None
@@ -457,6 +460,8 @@ if __name__ == "__main__":
 
     if users:
         print(f"Auth enabled — {len(users)} user(s) configured.")
+    elif os.environ.get("GRADIO_AUTH_ENABLED", "true").strip().lower() in ("false", "0"):
+        print("Auth disabled — demo mode (GRADIO_AUTH_ENABLED=false).")
     else:
         print("Warning: GRADIO_USERS not set — running without authentication.")
 
