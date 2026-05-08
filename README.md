@@ -14,197 +14,235 @@ pinned: false
 <div align="center" style="line-height: 1;">
   <a href="https://arxiv.org/abs/2412.20138" target="_blank"><img alt="arXiv" src="https://img.shields.io/badge/arXiv-2412.20138-B31B1B?logo=arxiv"/></a>
   <a href="https://discord.com/invite/hk9PGKShPK" target="_blank"><img alt="Discord" src="https://img.shields.io/badge/Discord-TradingResearch-7289da?logo=discord&logoColor=white&color=7289da"/></a>
-  <a href="./assets/wechat.png" target="_blank"><img alt="WeChat" src="https://img.shields.io/badge/WeChat-TauricResearch-brightgreen?logo=wechat&logoColor=white"/></a>
+  <a href="https://huggingface.co/spaces/bullcardo/tradingagents" target="_blank"><img alt="HF Spaces" src="https://img.shields.io/badge/%F0%9F%A4%97%20HF%20Spaces-My%20Live%20Demo%20(fork)-blue"/></a>
   <a href="https://x.com/TauricResearch" target="_blank"><img alt="X Follow" src="https://img.shields.io/badge/X-TauricResearch-white?logo=x&logoColor=white"/></a>
-  <br>
-  <a href="https://github.com/TauricResearch/" target="_blank"><img alt="Community" src="https://img.shields.io/badge/Join_GitHub_Community-TauricResearch-14C290?logo=discourse"/></a>
 </div>
 
 ---
 
-# TradingAgents: Multi-Agents LLM Financial Trading Framework 
+# TradingAgents: Multi-Agents LLM Financial Trading Framework
 
-> 🎉 **TradingAgents** officially released! We have received numerous inquiries about the work, and we would like to express our thanks for the enthusiasm in our community.
+> Fork of [TauricResearch/TradingAgents](https://github.com/TauricResearch/TradingAgents)
+> (arXiv:2412.20138). Several contributions from this branch have been adopted upstream.
+> This fork runs ahead of the upstream release cadence with additional features documented below.
 >
-> So we decided to fully open-source the framework. Looking forward to building impactful projects with you!
+> **[My live demo →](https://huggingface.co/spaces/bullcardo/tradingagents)** — deployed from this
+> fork, includes the Options Analyst, real sentiment dataflows, persistent memory log, and Gradio
+> web UI — none of which are in the upstream release.
 
-<div align="center">
-<a href="https://www.star-history.com/#TauricResearch/TradingAgents&Date">
- <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=TauricResearch/TradingAgents&type=Date&theme=dark" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=TauricResearch/TradingAgents&type=Date" />
-   <img alt="TradingAgents Star History" src="https://api.star-history.com/svg?repos=TauricResearch/TradingAgents&type=Date" style="width: 80%; height: auto;" />
- </picture>
-</a>
-</div>
+TradingAgents deploys a team of specialized LLM agents — analysts, researchers, trader, risk
+advisors, and a portfolio manager — that debate market conditions and produce a structured trading
+decision (Strong Buy → Strong Sell) for any ticker and date.
 
-<div align="center">
+---
 
-🚀 [TradingAgents](#tradingagents-framework) | ⚡ [Installation & CLI](#installation-and-cli) | 🎬 [Demo](https://www.youtube.com/watch?v=90gr5lwjIho) | 📦 [Package Usage](#tradingagents-package) | 🤝 [Contributing](#contributing) | 📄 [Citation](#citation)
+## Architecture
 
-</div>
+```
+  ┌──────────────────────────────────────────────────────────────────┐
+  │                         Data Sources                              │
+  │  ┌──────────┐  ┌────────────────┐  ┌────────────┐  ┌──────────┐  │
+  │  │ yfinance │  │    Finnhub     │  │ SEC EDGAR  │  │  Reddit  │  │
+  │  │(fallback)│  │  (primary)     │  │(8-K filings│  │ CNN F&G  │  │
+  │  └──────────┘  └────────────────┘  └────────────┘  └──────────┘  │
+  └──────────────────────────────────────────────────────────────────┘
+         │                │                   │               │
+         ▼                ▼                   ▼               ▼
+  ┌──────────┐  ┌──────────────────┐  ┌──────────────┐  ┌──────────────┐
+  │  Market  │  │    Options       │  │ Fundamentals │  │  Sentiment   │
+  │ Analyst  │  │    Analyst       │  │   Analyst    │  │   Analyst    │
+  │          │  │  Vol/OI skew     │  │ + consensus  │  │ Reddit+F&G   │
+  │          │  │  short interest  │  │ + earnings ↑ │  │              │
+  └────┬─────┘  └────────┬─────────┘  └──────┬───────┘  └──────┬───────┘
+       └─────────────────┴────────────────────┴──────────────────┘
+                                     │
+                           ┌─────────▼───────────┐
+                           │    Research Debate   │
+                           │   Bull ↔ Bear        │
+                           │   Research Manager   │ ← structured output
+                           └─────────┬────────────┘
+                                     │ investment_plan
+                           ┌─────────▼───────────┐
+                           │       Trader         │ ← structured output
+                           └─────────┬────────────┘
+                                     │ trader_investment_plan
+                           ┌─────────▼───────────┐
+                           │     Risk Debate      │
+                           │  Aggr/Cons/Neutral   │
+                           └─────────┬────────────┘
+                                     │
+                    ┌────────────────▼──────────────────────────────┐
+                    │            Portfolio Manager                   │
+                    │            structured output                   │
+                    │            reads TradingMemoryLog              │
+                    │   (5 same-ticker + 3 cross-ticker entries)     │
+                    └────────────────┬──────────────────────────────┘
+                                     │
+                    ┌────────────────▼──────────────────────────────┐
+                    │   Strong Buy / Buy / Hold / Sell / Strong Sell │
+                    └────────────────┬───────────────────────────────┘
+                                     │
+                    ┌────────────────▼───────────────────────────────────────────────┐
+                    │                   TradingMemoryLog                              │
+                    │                                                                 │
+                    │  RUN 1  →  [pending]  NVDA · 2024-05-10 · Buy                 │
+                    │                                                                 │
+                    │  RUN 2+    same ticker triggers auto-resolution:               │
+                    │            · fetch actual return via yfinance                  │
+                    │            · compute alpha vs SPY                              │
+                    │            · LLM writes reflection                             │
+                    │  →  [resolved]  NVDA · Buy · +8.3% · alpha +2.1% · 7d        │
+                    │                                                                 │
+                    │  Portfolio Manager reads on every run:                         │
+                    │  5 same-ticker resolved entries + 3 cross-ticker reflections   │
+                    └─────────────────────────────────────────────────────────────────┘
+  Access layers
+  ┌──────────────────┐   ┌──────────────────────────────────────────────────────┐
+  │   CLI (Rich TUI) │   │  Gradio Web UI                                       │
+  │   (upstream)     │   │  SSE streaming · localStorage · history panel        │
+  └──────────────────┘   │  S3 memory sync · HF Spaces deployment               │
+                         └──────────────────────────────────────────────────────┘
+```
 
-## TradingAgents Framework
+---
 
-TradingAgents is a multi-agent trading framework that mirrors the dynamics of real-world trading firms. By deploying specialized LLM-powered agents: from fundamental analysts, sentiment experts, and technical analysts, to trader, risk management team, the platform collaboratively evaluates market conditions and informs trading decisions. Moreover, these agents engage in dynamic discussions to pinpoint the optimal strategy.
+## Contributions (this fork)
 
-<p align="center">
-  <img src="assets/schema.png" style="width: 100%; height: auto;">
-</p>
+### Persistent decision memory with deferred return resolution *(design merged upstream — [PR #579](https://github.com/TauricResearch/TradingAgents/pull/579))*
+Replaced the original BM25 memory — effectively dead code between runs — with `TradingMemoryLog`:
+an append-only markdown log stored at `~/.tradingagents/memory/trading_memory.md`. After each run
+a pending entry is written. Five or more trading days later, the next same-ticker run automatically
+resolves it: fetches actual yfinance returns, computes alpha vs SPY, and writes an LLM-generated
+reflection. The Portfolio Manager receives the 5 most-recent same-ticker entries plus 3 cross-ticker
+reflections as context. Removed the `rank-bm25` dependency. 49 unit tests. The maintainer credited
+the design and test suite by name in commit `ebd2e12`.
 
-> TradingAgents framework is designed for research purposes. Trading performance may vary based on many factors, including the chosen backbone language models, model temperature, trading periods, the quality of data, and other non-deterministic factors. [It is not intended as financial, investment, or trading advice.](https://tauric.ai/disclaimer/)
+### Options Analyst — new analyst node
+Added a 5th analyst (slotted between Market and Social) that reads the live options chain via
+yfinance: call/put volume totals, highest Vol/OI contracts per expiration (7–60 DTE, capped at 4
+expirations), call/put skew, OTM call concentration, and short interest % of float. All free, no
+API key required. Extends `AgentState` with `options_report`.
 
-Our framework decomposes complex trading tasks into specialized roles. This ensures the system achieves a robust, scalable approach to market analysis and decision-making.
+### Finnhub + SEC EDGAR data vendors
+Built `finnhub.py` as the primary vendor for all data categories (market, indicators, fundamentals,
+news), with yfinance retained as fallback on any exception. Added `sec_edgar.py` for 8-K filing
+metadata via the EDGAR `/submissions` endpoint — cached ticker→CIK mapping, no API key, US-listed
+tickers only. Extended the fundamentals analyst with two new tools: `get_analyst_consensus`
+(buy/hold/sell counts, mean price target) and `get_earnings_surprise` (actual vs estimate EPS,
+last 4 quarters).
 
-### Analyst Team
-- Fundamentals Analyst: Evaluates company financials and performance metrics, identifying intrinsic values and potential red flags.
-- Sentiment Analyst: Analyzes social media and public sentiment using sentiment scoring algorithms to gauge short-term market mood.
-- News Analyst: Monitors global news and macroeconomic indicators, interpreting the impact of events on market conditions.
-- Technical Analyst: Utilizes technical indicators (like MACD and RSI) to detect trading patterns and forecast price movements.
+### Real sentiment analyst
+Replaced the stub social media analyst with real dataflows: `reddit_sentiment.py` (Reddit public
+JSON API across r/wallstreetbets, r/stocks, r/options — no OAuth required), `fear_greed.py` (CNN
+dataviz API), and a local-only Unusual Whales Discord monitor (Discord HTTP v10, UW embed regex
+parser). Rewrote the system prompt to accurately describe the analyst's actual data sources.
+Mock-based tests for all three sources.
 
-<p align="center">
-  <img src="assets/analyst.png" width="100%" style="display: inline-block; margin: 0 2%;">
-</p>
+### Structured output for decision agents
+Converted Portfolio Manager, Trader, and Research Manager from free-form text generation to typed
+Pydantic output schemas, eliminating regex-based decision parsing. Standardized to a 5-tier rating
+scale (Strong Buy / Buy / Hold / Sell / Strong Sell) across all agents for consistency with the
+memory log tag schema.
 
-### Researcher Team
-- Comprises both bullish and bearish researchers who critically assess the insights provided by the Analyst Team. Through structured debates, they balance potential gains against inherent risks.
+### LangGraph checkpoint resume
+Added SQLite-backed LangGraph checkpointing so a 5–15 minute analysis can resume from the last
+completed node after a crash or process kill.
 
-<p align="center">
-  <img src="assets/researcher.png" width="70%" style="display: inline-block; margin: 0 2%;">
-</p>
+### Gradio web UI + Hugging Face Spaces deployment
+Built `web/app.py`: a Gradio 6 streaming interface that yields SSE updates every 2 s during
+analysis. Added `gr.BrowserState` localStorage persistence (result survives mobile app-switch and
+server restart), an analysis history panel backed by `TradingMemoryLog` with click-to-fill,
+S3 memory sync on startup for serverless environments, `TRADINGAGENTS_HOME` env var for portable
+path config, and `GRADIO_AUTH_ENABLED` for unauthenticated public demos. Deployed on
+[HF Spaces via Docker SDK](https://huggingface.co/spaces/bullcardo/tradingagents).
 
-### Trader Agent
-- Composes reports from the analysts and researchers to make informed trading decisions. It determines the timing and magnitude of trades based on comprehensive market insights.
+### Multi-provider LLM support
+Extended the LLM factory with DeepSeek, Qwen (Alibaba DashScope), GLM (Zhipu AI), and Azure
+OpenAI — each with correct client instantiation and key routing. Added dynamic OpenRouter model
+search. Fixed `base_url` leaking into non-OpenAI provider clients. Added lazy-load fixtures so the
+test suite runs cleanly without live API credentials.
 
-<p align="center">
-  <img src="assets/risk.png" width="70%" style="display: inline-block; margin: 0 2%;">
-</p>
+### Docker + cross-platform reliability
+Containerized the project; moved all runtime files to `~/.tradingagents/` to fix Docker UID
+permission errors. Identified the incomplete scope of the Windows cp1252 encoding failures
+([#543](https://github.com/TauricResearch/TradingAgents/issues/543)) — the maintainer credited
+the diagnosis and applied `encoding="utf-8"` across all remaining file I/O in `872b063`. Fixed
+yfinance end-date off-by-one bias in backtesting fetchers.
 
-### Risk Management and Portfolio Manager
-- Continuously evaluates portfolio risk by assessing market volatility, liquidity, and other risk factors. The risk management team evaluates and adjusts trading strategies, providing assessment reports to the Portfolio Manager for final decision.
-- The Portfolio Manager approves/rejects the transaction proposal. If approved, the order will be sent to the simulated exchange and executed.
+### Hallucination mitigations — filed and adopted upstream
+Filed [#572](https://github.com/TauricResearch/TradingAgents/issues/572) with a detailed
+reproduction showing agents fabricating past trade lessons on first runs, identified all five
+affected agent prompts, and proposed the conditional injection fix. The maintainer implemented
+it in `8e7654f` with explicit credit. Separately added grounding rules to both sides of the
+research debate to prevent invented data citations in this branch.
 
-<p align="center">
-  <img src="assets/trader.png" width="70%" style="display: inline-block; margin: 0 2%;">
-</p>
+---
 
-## Installation and CLI
+## Installation
 
-### Installation
-
-Clone TradingAgents:
+Clone and install:
 ```bash
 git clone https://github.com/TauricResearch/TradingAgents.git
 cd TradingAgents
+pip install -e .
 ```
 
-Create a virtual environment in any of your favorite environment managers:
+Copy `.env.example` → `.env` and fill in your keys:
 ```bash
-conda create -n tradingagents python=3.13
-conda activate tradingagents
+# Required: one LLM provider
+OPENAI_API_KEY=...
+DASHSCOPE_API_KEY=...    # Qwen / Alibaba
+DEEPSEEK_API_KEY=...
+
+# Optional: data vendors (yfinance works without any key)
+FINNHUB_API_KEY=...      # recommended — 60 calls/min free tier
 ```
 
-Install dependencies:
+## Usage
+
+**CLI (interactive wizard):**
 ```bash
-pip install -r requirements.txt
+tradingagents analyze
 ```
 
-### Required APIs
-
-You will also need the FinnHub API for financial data. All of our code is implemented with the free tier.
+**Web UI:**
 ```bash
-export FINNHUB_API_KEY=$YOUR_FINNHUB_API_KEY
+python web/app.py
 ```
+Or visit the live deployment: <https://huggingface.co/spaces/bullcardo/tradingagents>
 
-You will need the OpenAI API for all the agents.
-```bash
-export OPENAI_API_KEY=$YOUR_OPENAI_API_KEY
-```
-
-### CLI Usage
-
-You can also try out the CLI directly by running:
-```bash
-python -m cli.main
-```
-You will see a screen where you can select your desired tickers, date, LLMs, research depth, etc.
-
-<p align="center">
-  <img src="assets/cli/cli_init.png" width="100%" style="display: inline-block; margin: 0 2%;">
-</p>
-
-An interface will appear showing results as they load, letting you track the agent's progress as it runs.
-
-<p align="center">
-  <img src="assets/cli/cli_news.png" width="100%" style="display: inline-block; margin: 0 2%;">
-</p>
-
-<p align="center">
-  <img src="assets/cli/cli_transaction.png" width="100%" style="display: inline-block; margin: 0 2%;">
-</p>
-
-## TradingAgents Package
-
-### Implementation Details
-
-We built TradingAgents with LangGraph to ensure flexibility and modularity. We utilize `o1-preview` and `gpt-4o` as our deep thinking and fast thinking LLMs for our experiments. However, for testing purposes, we recommend you use `o4-mini` and `gpt-4.1-mini` to save on costs as our framework makes **lots of** API calls.
-
-### Python Usage
-
-To use TradingAgents inside your code, you can import the `tradingagents` module and initialize a `TradingAgentsGraph()` object. The `.propagate()` function will return a decision. You can run `main.py`, here's also a quick example:
-
+**Python API:**
 ```python
 from tradingagents.graph.trading_graph import TradingAgentsGraph
 from tradingagents.default_config import DEFAULT_CONFIG
 
 ta = TradingAgentsGraph(debug=True, config=DEFAULT_CONFIG.copy())
-
-# forward propagate
 _, decision = ta.propagate("NVDA", "2024-05-10")
 print(decision)
 ```
 
-You can also adjust the default configuration to set your own choice of LLMs, debate rounds, etc.
+## LLM providers
 
-```python
-from tradingagents.graph.trading_graph import TradingAgentsGraph
-from tradingagents.default_config import DEFAULT_CONFIG
+`openai` · `anthropic` · `google` · `azure` · `xai` · `deepseek` · `qwen` · `glm` · `ollama` · `openrouter`
 
-# Create a custom config
-config = DEFAULT_CONFIG.copy()
-config["deep_think_llm"] = "gpt-4.1-nano"  # Use a different model
-config["quick_think_llm"] = "gpt-4.1-nano"  # Use a different model
-config["max_debate_rounds"] = 1  # Increase debate rounds
-config["online_tools"] = True # Use online tools or cached data
-
-# Initialize with custom config
-ta = TradingAgentsGraph(debug=True, config=config)
-
-# forward propagate
-_, decision = ta.propagate("NVDA", "2024-05-10")
-print(decision)
-```
-
-> For `online_tools`, we recommend enabling them for experimentation, as they provide access to real-time data. The agents' offline tools rely on cached data from our **Tauric TradingDB**, a curated dataset we use for backtesting. We're currently in the process of refining this dataset, and we plan to release it soon alongside our upcoming projects. Stay tuned!
-
-You can view the full list of configurations in `tradingagents/default_config.py`.
+Set `deep_think_llm` (Research Manager + Portfolio Manager) and `quick_think_llm` (all other agents)
+in `DEFAULT_CONFIG` or pass via CLI. See `tradingagents/default_config.py` for all knobs.
 
 ## Contributing
 
-We welcome contributions from the community! Whether it's fixing a bug, improving documentation, or suggesting a new feature, your input helps make this project better. If you are interested in this line of research, please consider joining our open-source financial AI research community [Tauric Research](https://tauric.ai/).
+We welcome contributions from the community! If you are interested in this line of research, please
+consider joining the open-source financial AI research community [Tauric Research](https://tauric.ai/).
 
 ## Citation
 
-Please reference our work if you find *TradingAgents* provides you with some help :)
-
-```
+```bibtex
 @misc{xiao2025tradingagentsmultiagentsllmfinancial,
-      title={TradingAgents: Multi-Agents LLM Financial Trading Framework}, 
+      title={TradingAgents: Multi-Agents LLM Financial Trading Framework},
       author={Yijia Xiao and Edward Sun and Di Luo and Wei Wang},
       year={2025},
       eprint={2412.20138},
       archivePrefix={arXiv},
       primaryClass={q-fin.TR},
-      url={https://arxiv.org/abs/2412.20138}, 
+      url={https://arxiv.org/abs/2412.20138},
 }
 ```
